@@ -1,0 +1,30 @@
+name: Post next pin
+
+# Manual only for now. A schedule is added once the first test works.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install composio
+      - name: Post next queued pin
+        env:
+          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
+          COMPOSIO_CONNECTED_ACCOUNT_ID: pinterest_tops-heigh
+        run: python scripts/post_next.py
+      - name: Save queue status
+        run: |
+          git config user.name "pin-bot"
+          git config user.email "pin-bot@users.noreply.github.com"
+          git add queue.json
+          git diff --cached --quiet || git commit -m "Update pin queue"
+          git push
